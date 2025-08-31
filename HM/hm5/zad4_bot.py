@@ -1,70 +1,52 @@
-def input_error_add(func):
+def input_error(func):
     def inner(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except (ValueError, IndexError, TypeError, KeyError):
-            return "Enter name and phone. Example: add Aleksandra 0932223332."
-
-    return inner
-def input_error_change(func):
-    def inner(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except (ValueError, IndexError, TypeError, KeyError):
-            return "Enter name and phone. Example: change Aleksandra 0932223331."
-
-    return inner
-def input_error_phone(func):
-    def inner(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except (ValueError, IndexError, TypeError, KeyError):
-            return "Enter person name. Example: [phone Aleksandra]."
+        except ValueError:
+            return "Phone number must be an integer."
+        except TypeError:
+            return "Invalid arguments."
     return inner
 
-@input_error_add
-def add_contact(contacts: list, name: str, num: str) -> str:
+@input_error
+def add_contact(contacts: dict, name: str, num: str) -> str:
     if not num.isdecimal():
         raise ValueError
-    for contact in contacts:
-        if contact["number"] == num:
-            return f"Contact with phone [{contact['number']}] already exists ({contact['name']})."
-        if contact["name"] == name:
-            return f"Contact [{contact['name']}] already exists ({contact['number']})."
+    if num in contacts.values():
+        for k, v in contacts.items():
+            if v == num:
+                return f"Contact with phone [{v}] already exists ({k})."
+    if name in contacts:
+        return f"Contact [{name}] already exists ({contacts[name]})."
 
-    contacts.append({"name": name, "number": num})
+    contacts[name] = num
     return f"Contact [{name}] added successfully with number: {num}."
-@input_error_change
-def change_contact(contacts:list,name: str, num: str) -> str:
+@input_error
+def change_contact(contacts:dict,name: str, num: str) -> str:
     if not num.isdecimal():
         raise ValueError
-    for contact in contacts:
-        if contact["name"] == name:
-            contact["number"] = num
-            return f"Number if contact [{contact['name']}] changed to {contact['number']} "
-
+    if name in contacts:
+        contacts[name] = num
+        return f"Number of contact [{name}] changed to {num}"
     return f"Contact [{name}] does not exist"
-@input_error_phone
-def show_phone(contacts:list,name:str) -> str:
-    for contact in contacts:
-        if contact["name"] == name:
-            return f"[{name}] number is {contact['number']}"
-
+@input_error
+def show_phone(contacts:dict,name:str) -> str:
+    if name in contacts:
+        return f"[{name}] number is {contacts[name]}"
     return f"Contact [{name}] does not exist"
 
-def show_all(contacts:list):
+def show_all(contacts:dict):
     if not contacts:
         return "No contacts."
     text = "---name----|---number---\n"
-    for contact in contacts:
-        t = f"{contact['name']}   :   {contact['number']}\n"
-        text = text + t
+    for name, num in contacts.items():
+        text += f"{name}   :   {num}\n"
     return text
 
 
 def main():
     print("Welcome to the assistant bot!")
-    contacts = []
+    contacts = {}
     while True:
         user_input = input("Enter a command: ")
         if not user_input.split():
